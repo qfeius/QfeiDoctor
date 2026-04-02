@@ -37,8 +37,17 @@ fn assert_valid_severity(severity: &Severity) {
 
 fn assert_valid_iso8601(ts: &str) {
     assert!(ts.ends_with('Z'), "Timestamp must end with Z: {}", ts);
-    assert!(ts.contains('T'), "Timestamp must contain T separator: {}", ts);
-    assert_eq!(ts.len(), 20, "Timestamp format YYYY-MM-DDTHH:MM:SSZ: {}", ts);
+    assert!(
+        ts.contains('T'),
+        "Timestamp must contain T separator: {}",
+        ts
+    );
+    assert_eq!(
+        ts.len(),
+        20,
+        "Timestamp format YYYY-MM-DDTHH:MM:SSZ: {}",
+        ts
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -74,25 +83,21 @@ fn assert_json_schema_compliance(report: &DiagnosticReport) {
 
     // Summary fields
     let summary = &json["summary"];
-    assert!(["pass", "warn", "fail", "skip"]
-        .contains(&summary["status"].as_str().unwrap_or("")));
-    assert!(["info", "warn", "fail"]
-        .contains(&summary["severity"].as_str().unwrap_or("")));
+    assert!(["pass", "warn", "fail", "skip"].contains(&summary["status"].as_str().unwrap_or("")));
+    assert!(["info", "warn", "fail"].contains(&summary["severity"].as_str().unwrap_or("")));
     assert!(summary["total_duration_ms"].is_u64());
 
     // Each module has status/severity/duration_ms/error + details
     for module_name in &["dns", "tcp", "tls", "http", "system"] {
         let m = &json[module_name];
         assert!(
-            ["pass", "warn", "fail", "skip"]
-                .contains(&m["status"].as_str().unwrap_or("")),
+            ["pass", "warn", "fail", "skip"].contains(&m["status"].as_str().unwrap_or("")),
             "{}.status invalid: {}",
             module_name,
             m["status"]
         );
         assert!(
-            ["info", "warn", "fail"]
-                .contains(&m["severity"].as_str().unwrap_or("")),
+            ["info", "warn", "fail"].contains(&m["severity"].as_str().unwrap_or("")),
             "{}.severity invalid: {}",
             module_name,
             m["severity"]
@@ -165,7 +170,10 @@ fn assert_json_schema_compliance(report: &DiagnosticReport) {
             assert!(qa["id"].is_string(), "quick_action.id must be string");
             assert!(qa["label"].is_string(), "quick_action.label must be string");
             assert_eq!(qa["kind"], "open_uri", "quick_action.kind must be open_uri");
-            assert!(qa["target"].is_string(), "quick_action.target must be string");
+            assert!(
+                qa["target"].is_string(),
+                "quick_action.target must be string"
+            );
         }
     }
 }
@@ -363,8 +371,7 @@ async fn smoke_json_roundtrip() {
     let report = diagnostics::run_diagnostics("example.com").await;
 
     // Serialize to JSON string (this is what "Copy JSON" does)
-    let json_str =
-        serde_json::to_string_pretty(&report).expect("DiagnosticReport must serialize");
+    let json_str = serde_json::to_string_pretty(&report).expect("DiagnosticReport must serialize");
 
     // Deserialize back
     let parsed: DiagnosticReport =
@@ -378,8 +385,7 @@ async fn smoke_json_roundtrip() {
     assert_eq!(parsed.summary.status, report.summary.status);
 
     // Verify JSON output contains all required top-level keys
-    let json_val: serde_json::Value =
-        serde_json::from_str(&json_str).expect("Must parse as Value");
+    let json_val: serde_json::Value = serde_json::from_str(&json_str).expect("Must parse as Value");
     for key in &[
         "version",
         "generated_at",
