@@ -13,7 +13,7 @@ export function DnsRecordsCard({ dns }: DnsRecordsCardProps) {
     <div className="card" style={{ marginTop: 16 }}>
       <div className="card__title">
         DNS Records{" "}
-        <span style={{ fontWeight: 400, color: "#999" }}>
+        <span style={{ fontWeight: 400, color: "var(--text-muted)" }}>
           {records.length} found
         </span>
       </div>
@@ -21,7 +21,7 @@ export function DnsRecordsCard({ dns }: DnsRecordsCardProps) {
         <div className="dns-record" key={i}>
           <span className="dns-record__type">{record.type}</span>
           <span>{record.value}</span>
-          <span style={{ color: "#999", marginLeft: "auto" }}>
+          <span style={{ color: "var(--text-muted)", marginLeft: "auto" }}>
             TTL: {record.ttl}s
           </span>
         </div>
