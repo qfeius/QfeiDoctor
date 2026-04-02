@@ -9,13 +9,15 @@ pub fn diagnose(server_date_header: Option<&str>) -> SystemModule {
     let hosts_override = check_hosts_override();
     let (clock_skewed, clock_offset_sec) = check_clock_skew(server_date_header);
 
-    let status = if proxy.enabled || clock_skewed {
+    let has_warning = proxy.enabled || clock_skewed || hosts_override;
+
+    let status = if has_warning {
         Status::Warn
     } else {
         Status::Pass
     };
 
-    let severity = if proxy.enabled || clock_skewed {
+    let severity = if has_warning {
         Severity::Warn
     } else {
         Severity::Info
@@ -156,6 +158,20 @@ fn detect_proxy_windows() -> ProxyInfo {
         let server: String = internet_settings
             .get_value("ProxyServer")
             .unwrap_or_default();
+        let auto_config_url: String = internet_settings
+            .get_value("AutoConfigURL")
+            .unwrap_or_default();
+
+        // PAC takes precedence if present
+        if !auto_config_url.is_empty() {
+            return ProxyInfo {
+                enabled: true,
+                proxy_type: Some("pac".to_string()),
+                address: None,
+                pac_url: Some(auto_config_url),
+                env_var: None,
+            };
+        }
 
         return ProxyInfo {
             enabled: enabled == 1,

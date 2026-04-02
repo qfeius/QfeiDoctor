@@ -186,7 +186,7 @@ fn generate_actions(
     let mut manual = Vec::new();
     let mut quick = Vec::new();
 
-    // ── Cross-module combo 1: Proxy + TLS failure → corporate MITM ──
+    // ── COMBO-01: Proxy + TLS cert replaced → corporate MITM ──
     if system.details.proxy.enabled && (tls.status == Status::Fail || tls.details.cert.self_signed)
     {
         manual.push(
@@ -195,14 +195,14 @@ fn generate_actions(
                 .to_string(),
         );
         quick.push(QuickAction {
-            id: "open_proxy_settings".to_string(),
+            id: "open_proxy".to_string(),
             label: "打开代理设置".to_string(),
             kind: "open_uri".to_string(),
             target: "ms-settings:network-proxy".to_string(),
         });
     }
 
-    // ── Cross-module combo 2: DNS private_ip + HTTP anomaly → DNS hijack ──
+    // ── COMBO-02: DNS hijack + HTTP anomaly → DNS hijack/pollution ──
     if dns.details.suspected_hijack
         && (http.status == Status::Fail || http.details.downgraded || http.details.empty_body)
     {
@@ -212,21 +212,39 @@ fn generate_actions(
                 .to_string(),
         );
         quick.push(QuickAction {
-            id: "open_dns_settings".to_string(),
-            label: "打开网络设置".to_string(),
+            id: "flush_dns".to_string(),
+            label: "刷新 DNS 缓存".to_string(),
             kind: "open_uri".to_string(),
-            target: "ms-settings:network-ethernet".to_string(),
+            target: "ipconfig /flushdns".to_string(),
+        });
+        quick.push(QuickAction {
+            id: "open_hosts".to_string(),
+            label: "打开 hosts 文件".to_string(),
+            kind: "open_uri".to_string(),
+            target: "notepad C:\\Windows\\System32\\drivers\\etc\\hosts".to_string(),
         });
     }
 
-    // ── Cross-module combo 3: Clock skew + TLS failure → clock causing cert rejection ──
+    // ── COMBO-03: TCP ok + HTTP 5xx → server-side issue, not client network ──
+    if tcp.status == Status::Pass {
+        if let Some(code) = http.details.status_code {
+            if code >= 500 {
+                manual.push(format!(
+                    "TCP 连接正常但 HTTP 返回 {}，问题在站点服务端而非客户网络。建议联系站点运维",
+                    code
+                ));
+            }
+        }
+    }
+
+    // ── Clock skew + TLS failure → clock causing cert rejection ──
     if system.details.clock_skewed && tls.status == Status::Fail {
         manual.push(format!(
             "系统时钟偏差约 {} 秒，这会导致 TLS 证书验证失败。请校准系统时间后重试",
             system.details.clock_offset_sec.unwrap_or(0).abs()
         ));
         quick.push(QuickAction {
-            id: "open_datetime_settings".to_string(),
+            id: "open_datetime".to_string(),
             label: "打开日期和时间设置".to_string(),
             kind: "open_uri".to_string(),
             target: "ms-settings:dateandtime".to_string(),
@@ -240,24 +258,32 @@ fn generate_actions(
         manual.push(
             "DNS 解析失败，检查域名是否正确，或尝试更换 DNS 服务器（如 8.8.8.8）".to_string(),
         );
+        quick.push(QuickAction {
+            id: "flush_dns".to_string(),
+            label: "刷新 DNS 缓存".to_string(),
+            kind: "open_uri".to_string(),
+            target: "ipconfig /flushdns".to_string(),
+        });
     } else if dns.details.suspected_hijack && !has_action(&manual, "DNS 被劫持") {
         manual.push("域名解析到内网地址，可能存在 DNS 劫持。建议更换 DNS 服务器验证".to_string());
+    }
+    if dns.details.private_ip {
+        quick.push(QuickAction {
+            id: "open_hosts".to_string(),
+            label: "打开 hosts 文件".to_string(),
+            kind: "open_uri".to_string(),
+            target: "notepad C:\\Windows\\System32\\drivers\\etc\\hosts".to_string(),
+        });
     }
 
     // TCP
     if tcp.status == Status::Fail {
         manual.push("目标端口不可达，检查防火墙设置或确认网络连接正常".to_string());
         quick.push(QuickAction {
-            id: "open_network_status".to_string(),
+            id: "open_network".to_string(),
             label: "打开网络状态".to_string(),
             kind: "open_uri".to_string(),
             target: "ms-settings:network-status".to_string(),
-        });
-        quick.push(QuickAction {
-            id: "open_firewall".to_string(),
-            label: "打开防火墙设置".to_string(),
-            kind: "open_uri".to_string(),
-            target: "ms-settings:windowsdefender".to_string(),
         });
     }
 
@@ -271,7 +297,6 @@ fn generate_actions(
             manual.push("SSL 证书域名不匹配，可能存在配置错误或中间人攻击".to_string());
         }
         if cert.self_signed && !system.details.proxy.enabled {
-            // Only show standalone self-signed warning if no proxy (combo 1 covers proxy case)
             manual.push("检测到自签名证书，可能存在网络劫持".to_string());
         }
         if cert.expiring_soon {
@@ -293,9 +318,13 @@ fn generate_actions(
         }
     }
 
-    // HTTP
+    // HTTP (standalone, not already in combos)
     if http.status == Status::Fail && !dns.details.suspected_hijack {
-        manual.push("HTTP 请求失败，服务端可能存在问题，请稍后重试".to_string());
+        let is_5xx = http.details.status_code.is_some_and(|c| c >= 500);
+        if !is_5xx {
+            // 5xx already covered by COMBO-03
+            manual.push("HTTP 请求失败，服务端可能存在问题，请稍后重试".to_string());
+        }
     }
     if http.status == Status::Warn {
         if let Some(code) = http.details.status_code {
@@ -311,10 +340,9 @@ fn generate_actions(
 
     // System (standalone, not already in combos)
     if system.details.proxy.enabled && tls.status != Status::Fail && !tls.details.cert.self_signed {
-        // Proxy is on but TLS is fine — still worth mentioning
         manual.push("检测到系统代理已开启，如遇问题建议关闭代理后重试".to_string());
         quick.push(QuickAction {
-            id: "open_proxy_settings".to_string(),
+            id: "open_proxy".to_string(),
             label: "打开代理设置".to_string(),
             kind: "open_uri".to_string(),
             target: "ms-settings:network-proxy".to_string(),
@@ -322,13 +350,12 @@ fn generate_actions(
     }
 
     if system.details.clock_skewed && tls.status != Status::Fail {
-        // Clock skew detected but TLS still passed — warn anyway
         manual.push(format!(
             "系统时钟偏差约 {} 秒，建议校准以避免潜在问题",
             system.details.clock_offset_sec.unwrap_or(0).abs()
         ));
         quick.push(QuickAction {
-            id: "open_datetime_settings".to_string(),
+            id: "open_datetime".to_string(),
             label: "打开日期和时间设置".to_string(),
             kind: "open_uri".to_string(),
             target: "ms-settings:dateandtime".to_string(),
@@ -337,6 +364,12 @@ fn generate_actions(
 
     if system.details.hosts_override {
         manual.push("检测到 hosts 文件有自定义条目，可能影响域名解析结果".to_string());
+        quick.push(QuickAction {
+            id: "open_hosts".to_string(),
+            label: "打开 hosts 文件".to_string(),
+            kind: "open_uri".to_string(),
+            target: "notepad C:\\Windows\\System32\\drivers\\etc\\hosts".to_string(),
+        });
     }
 
     // Deduplicate quick actions by id
@@ -691,10 +724,7 @@ mod tests {
             .manual_actions
             .iter()
             .any(|a| a.contains("企业代理拦截")));
-        assert!(actions
-            .quick_actions
-            .iter()
-            .any(|a| a.id == "open_proxy_settings"));
+        assert!(actions.quick_actions.iter().any(|a| a.id == "open_proxy"));
     }
 
     #[test]
@@ -739,7 +769,7 @@ mod tests {
         assert!(actions
             .quick_actions
             .iter()
-            .any(|a| a.id == "open_datetime_settings"));
+            .any(|a| a.id == "open_datetime"));
     }
 
     #[test]
@@ -749,15 +779,46 @@ mod tests {
             .manual_actions
             .iter()
             .any(|a| a.contains("端口不可达")));
+        assert!(actions.quick_actions.iter().any(|a| a.id == "open_network"));
+    }
+
+    #[test]
+    fn test_actions_combo_tcp_ok_http_5xx() {
+        let http_5xx = HttpModule {
+            status: Status::Fail,
+            severity: Severity::Fail,
+            duration_ms: 100,
+            error: None,
+            details: HttpDetails {
+                status_code: Some(502),
+                redirect_chain: vec![],
+                headers: HashMap::new(),
+                empty_body: false,
+                downgraded: false,
+            },
+        };
+        let actions = generate_actions(&ok_dns(), &ok_tcp(), &ok_tls(), &http_5xx, &ok_system());
+        // COMBO-03: should say it's a server-side issue
         assert!(actions
-            .quick_actions
+            .manual_actions
             .iter()
-            .any(|a| a.id == "open_network_status"));
+            .any(|a| a.contains("站点服务端")));
+    }
+
+    #[test]
+    fn test_actions_hosts_override() {
+        let mut sys = ok_system();
+        sys.details.hosts_override = true;
+        sys.status = Status::Warn;
+        sys.severity = Severity::Warn;
+        let actions = generate_actions(&ok_dns(), &ok_tcp(), &ok_tls(), &ok_http(), &sys);
+        assert!(actions.manual_actions.iter().any(|a| a.contains("hosts")));
+        assert!(actions.quick_actions.iter().any(|a| a.id == "open_hosts"));
     }
 
     #[test]
     fn test_actions_quick_actions_deduplicated() {
-        // Proxy + TLS fail both want open_proxy_settings — should appear only once
+        // Proxy + TLS fail both want open_proxy — should appear only once
         let actions = generate_actions(
             &ok_dns(),
             &ok_tcp(),
@@ -768,7 +829,7 @@ mod tests {
         let proxy_count = actions
             .quick_actions
             .iter()
-            .filter(|a| a.id == "open_proxy_settings")
+            .filter(|a| a.id == "open_proxy")
             .count();
         assert_eq!(proxy_count, 1);
     }
