@@ -64,6 +64,9 @@ pub async fn diagnose(domain: &str) -> DnsModule {
 
     let resolved_ip = records.first().cloned().unwrap_or_default();
     let private_ip = is_private_ip(&resolved_ip);
+    // All IPs resolving to private addresses for a public domain is suspicious
+    let all_private = records.iter().all(|ip| is_private_ip(ip));
+    let suspected_hijack = all_private && private_ip;
 
     let dns_records: Vec<DnsRecord> = records
         .iter()
@@ -81,31 +84,48 @@ pub async fn diagnose(domain: &str) -> DnsModule {
         })
         .collect();
 
+    // Warn if resolved to private IP (possible DNS hijack or local override)
+    let (status, severity, error) = if suspected_hijack {
+        (
+            Status::Warn,
+            Severity::Warn,
+            Some(format!(
+                "域名解析到内网地址 {}，可能存在 DNS 劫持或 hosts 文件篡改",
+                resolved_ip
+            )),
+        )
+    } else {
+        (Status::Pass, Severity::Info, None)
+    };
+
     DnsModule {
-        status: Status::Pass,
-        severity: Severity::Info,
+        status,
+        severity,
         duration_ms: start.elapsed().as_millis() as u64,
-        error: None,
+        error,
         details: DnsDetails {
             records: dns_records,
             resolved: true,
             resolved_ip: Some(resolved_ip),
-            suspected_hijack: false,
+            suspected_hijack,
             private_ip,
         },
     }
 }
 
 fn is_private_ip(ip: &str) -> bool {
-    ip.starts_with("10.")
-        || ip.starts_with("172.16.")
-        || ip.starts_with("172.17.")
-        || ip.starts_with("172.18.")
-        || ip.starts_with("172.19.")
-        || ip.starts_with("172.2")
-        || ip.starts_with("172.3")
-        || ip.starts_with("192.168.")
-        || ip.starts_with("127.")
+    if ip.starts_with("10.") || ip.starts_with("192.168.") || ip.starts_with("127.") {
+        return true;
+    }
+    // RFC 1918: 172.16.0.0 - 172.31.255.255
+    if let Some(rest) = ip.strip_prefix("172.") {
+        if let Some(second_octet) = rest.split('.').next() {
+            if let Ok(octet) = second_octet.parse::<u8>() {
+                return (16..=31).contains(&octet);
+            }
+        }
+    }
+    false
 }
 
 #[cfg(test)]
@@ -136,5 +156,13 @@ mod tests {
         assert!(is_private_ip("127.0.0.1"));
         assert!(!is_private_ip("8.8.8.8"));
         assert!(!is_private_ip("104.18.22.45"));
+    }
+
+    #[test]
+    fn test_is_private_ip_172_range() {
+        assert!(is_private_ip("172.16.0.1"));
+        assert!(is_private_ip("172.31.255.254"));
+        assert!(!is_private_ip("172.32.0.1"));
+        assert!(!is_private_ip("172.15.0.1"));
     }
 }
