@@ -7,6 +7,9 @@ use tokio::net::TcpStream;
 pub async fn diagnose(domain: &str, ip: &str, port: u16) -> TlsModule {
     let start = std::time::Instant::now();
 
+    // Ensure crypto provider is installed (rustls 0.23 requires explicit init)
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
     let mut root_store = rustls::RootCertStore::empty();
     root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
 
