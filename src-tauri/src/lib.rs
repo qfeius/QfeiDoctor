@@ -1,4 +1,4 @@
-mod diagnostics;
+pub mod diagnostics;
 
 use diagnostics::result::DiagnosticReport;
 
