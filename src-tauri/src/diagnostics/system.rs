@@ -1,43 +1,36 @@
-use super::result::{PhaseDiagnostic, PhaseStatus};
-use serde_json::json;
+use super::result::{ProxyInfo, Severity, Status, SystemDetails, SystemModule};
 
-/// Diagnose system network configuration (proxy, hosts, DNS settings).
-pub fn diagnose() -> PhaseDiagnostic {
+/// Diagnose system network configuration.
+pub fn diagnose() -> SystemModule {
     let start = std::time::Instant::now();
 
-    let proxy_info = detect_proxy();
-    let hosts_info = check_hosts_file();
+    let proxy = detect_proxy();
+    let hosts_override = check_hosts_override();
 
-    let status = if proxy_info.enabled {
-        PhaseStatus::Warn
+    let status = if proxy.enabled {
+        Status::Warn
     } else {
-        PhaseStatus::Pass
+        Status::Pass
     };
 
-    PhaseDiagnostic {
-        name: "system".to_string(),
+    let severity = if proxy.enabled {
+        Severity::Warn
+    } else {
+        Severity::Info
+    };
+
+    SystemModule {
         status,
+        severity,
         duration_ms: start.elapsed().as_millis() as u64,
-        details: Some(json!({
-            "proxy_enabled": proxy_info.enabled,
-            "proxy_server": proxy_info.server,
-            "hosts_modified": hosts_info.modified,
-            "hosts_entries": hosts_info.custom_entries,
-            "os": std::env::consts::OS,
-            "arch": std::env::consts::ARCH,
-        })),
         error: None,
+        details: SystemDetails {
+            proxy,
+            clock_skewed: false,
+            clock_offset_sec: None,
+            hosts_override,
+        },
     }
-}
-
-struct ProxyInfo {
-    enabled: bool,
-    server: Option<String>,
-}
-
-struct HostsInfo {
-    modified: bool,
-    custom_entries: usize,
 }
 
 fn detect_proxy() -> ProxyInfo {
@@ -67,37 +60,54 @@ fn detect_proxy_windows() -> ProxyInfo {
 
         return ProxyInfo {
             enabled: enabled == 1,
-            server: if server.is_empty() {
+            proxy_type: if enabled == 1 {
+                Some("system".to_string())
+            } else {
+                None
+            },
+            address: if server.is_empty() {
                 None
             } else {
                 Some(server)
             },
+            pac_url: None,
+            env_var: None,
         };
     }
 
     ProxyInfo {
         enabled: false,
-        server: None,
+        proxy_type: None,
+        address: None,
+        pac_url: None,
+        env_var: None,
     }
 }
 
 #[cfg(not(target_os = "windows"))]
 fn detect_proxy_env() -> ProxyInfo {
-    let http_proxy = std::env::var("http_proxy")
-        .or_else(|_| std::env::var("HTTP_PROXY"))
-        .ok();
     let https_proxy = std::env::var("https_proxy")
         .or_else(|_| std::env::var("HTTPS_PROXY"))
+        .ok();
+    let http_proxy = std::env::var("http_proxy")
+        .or_else(|_| std::env::var("HTTP_PROXY"))
         .ok();
 
     let server = https_proxy.or(http_proxy);
     ProxyInfo {
         enabled: server.is_some(),
-        server,
+        proxy_type: if server.is_some() {
+            Some("env".to_string())
+        } else {
+            None
+        },
+        address: server.clone(),
+        pac_url: None,
+        env_var: server,
     }
 }
 
-fn check_hosts_file() -> HostsInfo {
+fn check_hosts_override() -> bool {
     #[cfg(target_os = "windows")]
     let hosts_path = "C:\\Windows\\System32\\drivers\\etc\\hosts";
     #[cfg(not(target_os = "windows"))]
@@ -105,29 +115,16 @@ fn check_hosts_file() -> HostsInfo {
 
     let content = match std::fs::read_to_string(hosts_path) {
         Ok(c) => c,
-        Err(_) => {
-            return HostsInfo {
-                modified: false,
-                custom_entries: 0,
-            }
-        }
+        Err(_) => return false,
     };
 
-    let custom_entries = content
-        .lines()
-        .filter(|line| {
-            let trimmed = line.trim();
-            !trimmed.is_empty()
-                && !trimmed.starts_with('#')
-                && !trimmed.contains("localhost")
-                && !trimmed.contains("broadcasthost")
-        })
-        .count();
-
-    HostsInfo {
-        modified: custom_entries > 0,
-        custom_entries,
-    }
+    content.lines().any(|line| {
+        let trimmed = line.trim();
+        !trimmed.is_empty()
+            && !trimmed.starts_with('#')
+            && !trimmed.contains("localhost")
+            && !trimmed.contains("broadcasthost")
+    })
 }
 
 #[cfg(test)]
@@ -137,7 +134,14 @@ mod tests {
     #[test]
     fn test_system_diagnose() {
         let result = diagnose();
-        assert_eq!(result.name, "system");
-        assert!(result.details.is_some());
+        assert!(result.status == Status::Pass || result.status == Status::Warn);
+    }
+
+    #[test]
+    fn test_detect_proxy_env_no_proxy() {
+        // Without proxy env vars set, should detect no proxy
+        // (may vary by environment, so just check no panic)
+        let proxy = detect_proxy();
+        assert!(!proxy.enabled || proxy.proxy_type.is_some());
     }
 }
