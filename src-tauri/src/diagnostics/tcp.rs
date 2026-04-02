@@ -81,10 +81,9 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    #[ignore] // requires network
     async fn test_tcp_connect_known_host() {
-        // example.com port 80 should be reachable
         let result = diagnose("93.184.216.34", 80).await;
         assert_eq!(result.name, "tcp");
-        // May pass or fail depending on network, but should not panic
     }
 }

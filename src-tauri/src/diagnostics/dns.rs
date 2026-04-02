@@ -62,19 +62,18 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    #[ignore] // requires network
     async fn test_dns_resolve_known_domain() {
         let result = diagnose("example.com").await;
         assert_eq!(result.name, "dns");
-        // example.com should resolve
         assert_eq!(result.status, PhaseStatus::Pass);
         assert!(result.details.is_some());
     }
 
     #[tokio::test]
+    #[ignore] // requires network
     async fn test_dns_resolve_invalid_domain() {
         let result = diagnose("thisdomaindoesnotexist12345.invalid").await;
-        // Some DNS resolvers may resolve invalid domains (e.g. ISP DNS hijacking)
-        // so we just verify the function completes without panic
         assert_eq!(result.name, "dns");
     }
 }
