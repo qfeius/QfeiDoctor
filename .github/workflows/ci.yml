@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  check:
+  format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +21,29 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: clippy, rustfmt
+          components: rustfmt
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Format check
+        run: make format-check
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
 
       - name: Install system dependencies (Linux)
         run: |
@@ -31,17 +53,36 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Format check
-        run: make format-check
-
       - name: Lint
         run: make lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install npm dependencies
+        run: npm ci
 
       - name: Test
         run: make test
 
   build:
-    needs: check
+    needs: [format, lint, test]
     strategy:
       fail-fast: false
       matrix:
