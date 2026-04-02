@@ -7,7 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  check:
+  format:
+    name: Format Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +22,33 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: clippy, rustfmt
+          components: rustfmt
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Check Rust formatting
+        run: make format-check-rust
+
+      - name: Check frontend formatting
+        run: make format-check-fe
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
 
       - name: Install system dependencies (Linux)
         run: |
@@ -31,17 +58,44 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Format check
-        run: make format-check
+      - name: Lint Rust
+        run: make lint-rust
 
-      - name: Lint
-        run: make lint
+      - name: Lint frontend
+        run: make lint-fe
 
-      - name: Test
-        run: make test
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Test Rust
+        run: make test-rust
+
+      - name: Test frontend
+        run: make test-fe
 
   build:
-    needs: check
+    name: Build (${{ matrix.target }})
+    needs: [format, lint, test]
     strategy:
       fail-fast: false
       matrix:
