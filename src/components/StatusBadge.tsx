@@ -1,6 +1,6 @@
-import type { PhaseStatus } from "../types/diagnostic";
+import type { Status } from "../types/diagnostic";
 
-const LABELS: Record<PhaseStatus, string> = {
+const LABELS: Record<Status, string> = {
   pass: "Pass",
   warn: "Warn",
   fail: "Fail",
@@ -8,7 +8,7 @@ const LABELS: Record<PhaseStatus, string> = {
 };
 
 interface StatusBadgeProps {
-  status: PhaseStatus;
+  status: Status;
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {

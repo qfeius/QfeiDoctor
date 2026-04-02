@@ -1,10 +1,10 @@
 import { useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { DiagnosticReport } from "../types/diagnostic";
+import type { DiagnosticResult } from "../types/diagnostic";
 
 export function useDiagnostic() {
   const [isRunning, setIsRunning] = useState(false);
-  const [result, setResult] = useState<DiagnosticReport | null>(null);
+  const [result, setResult] = useState<DiagnosticResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const start = useCallback(async (target: string) => {
@@ -12,7 +12,7 @@ export function useDiagnostic() {
     setError(null);
     setResult(null);
     try {
-      const report = await invoke<DiagnosticReport>("run_diagnosis", {
+      const report = await invoke<DiagnosticResult>("run_diagnosis", {
         target,
       });
       setResult(report);

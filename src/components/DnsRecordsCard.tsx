@@ -1,17 +1,11 @@
-import type { PhaseDiagnostic } from "../types/diagnostic";
+import type { DnsModule } from "../types/diagnostic";
 
 interface DnsRecordsCardProps {
-  dnsPhase: PhaseDiagnostic;
+  dns: DnsModule;
 }
 
-interface DnsRecord {
-  type: string;
-  value: string;
-  ttl?: number;
-}
-
-export function DnsRecordsCard({ dnsPhase }: DnsRecordsCardProps) {
-  const records = (dnsPhase.details?.records as DnsRecord[] | undefined) ?? [];
+export function DnsRecordsCard({ dns }: DnsRecordsCardProps) {
+  const { records } = dns.details;
 
   if (records.length === 0) return null;
 
@@ -27,11 +21,9 @@ export function DnsRecordsCard({ dnsPhase }: DnsRecordsCardProps) {
         <div className="dns-record" key={i}>
           <span className="dns-record__type">{record.type}</span>
           <span>{record.value}</span>
-          {record.ttl != null && (
-            <span style={{ color: "#999", marginLeft: "auto" }}>
-              TTL: {record.ttl}s
-            </span>
-          )}
+          <span style={{ color: "#999", marginLeft: "auto" }}>
+            TTL: {record.ttl}s
+          </span>
         </div>
       ))}
     </div>

@@ -1,32 +1,36 @@
-import type { DiagnosticReport } from "../types/diagnostic";
+import type { DiagnosticResult } from "../types/diagnostic";
 import { StatusBadge } from "./StatusBadge";
 
 interface SummaryCardProps {
-  report: DiagnosticReport;
+  result: DiagnosticResult;
 }
 
-export function SummaryCard({ report }: SummaryCardProps) {
+export function SummaryCard({ result }: SummaryCardProps) {
+  const { summary } = result;
+
   return (
     <div className="card">
       <div className="card__title">Analysis Summary</div>
       <div className="summary-row">
         <span className="summary-row__label">Overall Status</span>
-        <StatusBadge status={report.overall_status} />
+        <StatusBadge status={summary.status} />
       </div>
       <div className="summary-row">
         <span className="summary-row__label">Total Duration</span>
         <span className="summary-row__value">
-          {report.total_duration_ms} ms
+          {summary.total_duration_ms} ms
         </span>
       </div>
       <div className="summary-row">
         <span className="summary-row__label">Resolved IP</span>
-        <span className="summary-row__value">{report.resolved_ip ?? "—"}</span>
+        <span className="summary-row__value">
+          {summary.resolved_ip ?? "\u2014"}
+        </span>
       </div>
-      {report.failure_stage && (
+      {summary.failure_stage && (
         <div className="summary-row">
           <span className="summary-row__label">Failure Stage</span>
-          <span className="summary-row__value">{report.failure_stage}</span>
+          <span className="summary-row__value">{summary.failure_stage}</span>
         </div>
       )}
     </div>

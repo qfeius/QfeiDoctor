@@ -16,23 +16,11 @@ function App() {
     await writeText(JSON.stringify(result, null, 2));
   };
 
-  // Derive proxy state from system phase
-  const systemPhase = result?.phases.find((p) => p.name === "system");
-  const proxyEnabled = systemPhase?.details?.proxy_enabled === true;
-  const proxyAddress = systemPhase?.details?.proxy_address as
-    | string
-    | undefined;
-
-  // DNS phase for records card
-  const dnsPhase = result?.phases.find((p) => p.name === "dns");
-
   return (
     <div className="app">
       <Header />
 
-      {result && (
-        <ProxyAlert proxyEnabled={proxyEnabled} proxyAddress={proxyAddress} />
-      )}
+      {result && <ProxyAlert proxy={result.system.details.proxy} />}
 
       <InputBar
         onStart={start}
@@ -49,13 +37,13 @@ function App() {
         <>
           <div className="result-layout">
             <div>
-              <SummaryCard report={result} />
-              {dnsPhase && <DnsRecordsCard dnsPhase={dnsPhase} />}
+              <SummaryCard result={result} />
+              <DnsRecordsCard dns={result.dns} />
             </div>
-            <DiagnosticTrace phases={result.phases} />
+            <DiagnosticTrace result={result} />
           </div>
 
-          <RecommendedActions suggestions={result.suggestions} />
+          <RecommendedActions actions={result.recommended_actions} />
         </>
       )}
     </div>

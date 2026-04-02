@@ -1,4 +1,4 @@
-import type { PhaseDiagnostic } from "../types/diagnostic";
+import type { Status } from "../types/diagnostic";
 import { StatusBadge } from "./StatusBadge";
 
 const PHASE_LABELS: Record<string, string> = {
@@ -10,30 +10,37 @@ const PHASE_LABELS: Record<string, string> = {
 };
 
 interface PhaseSectionProps {
-  phase: PhaseDiagnostic;
+  name: string;
+  status: Status;
+  duration_ms: number;
+  error: string | null;
+  details: Record<string, unknown>;
 }
 
-export function PhaseSection({ phase }: PhaseSectionProps) {
-  const label = PHASE_LABELS[phase.name] ?? phase.name;
+export function PhaseSection({
+  name,
+  status,
+  duration_ms,
+  error,
+  details,
+}: PhaseSectionProps) {
+  const label = PHASE_LABELS[name] ?? name;
 
   return (
     <div className="phase-section">
       <div className="phase-section__header">
-        <StatusBadge status={phase.status} />
+        <StatusBadge status={status} />
         <span>{label}</span>
-        <span className="phase-section__duration">{phase.duration_ms}ms</span>
+        <span className="phase-section__duration">{duration_ms}ms</span>
       </div>
       <div className="phase-section__detail">
-        {phase.error && <div>Error: {phase.error}</div>}
-        {phase.details &&
-          Object.entries(phase.details).map(([key, value]) => (
-            <div key={key}>
-              {key}:{" "}
-              {typeof value === "object"
-                ? JSON.stringify(value)
-                : String(value)}
-            </div>
-          ))}
+        {error && <div>Error: {error}</div>}
+        {Object.entries(details).map(([key, value]) => (
+          <div key={key}>
+            {key}:{" "}
+            {typeof value === "object" ? JSON.stringify(value) : String(value)}
+          </div>
+        ))}
       </div>
     </div>
   );
