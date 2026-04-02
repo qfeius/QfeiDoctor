@@ -8,10 +8,6 @@
 
 - [Node.js](https://nodejs.org/) >= 22
 - [Rust](https://rustup.rs/) (stable)
-- 系统依赖（仅 Linux）：
-  ```bash
-  sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-  ```
 
 ## Quick Start
 
