@@ -1,4 +1,4 @@
-.PHONY: all build test lint format format-fix format-check dev clean
+.PHONY: all build test lint format format-fix format-check dev run clean
 
 # Default target
 all: format lint test build
@@ -15,6 +15,8 @@ build-release:
 # ---- Development ----
 dev:
 	npm run tauri dev
+
+run: dev
 
 # ---- Testing ----
 test: test-rust test-fe

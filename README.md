@@ -20,7 +20,7 @@
 npm ci
 
 # 开发模式（启动 Tauri + Vite dev server）
-npm run tauri dev
+make run
 ```
 
 应用会自动打开一个桌面窗口，输入域名或 URL 即可开始诊断。
@@ -35,6 +35,7 @@ npm run tauri build
 ## Development Commands
 
 ```bash
+make run           # 启动本地开发环境（Tauri + Vite）
 make format        # 检查格式（CI 用）
 make format-fix    # 自动格式化 Rust + TypeScript
 make lint          # Clippy + ESLint
