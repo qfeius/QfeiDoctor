@@ -26,8 +26,10 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Format check
-        run: make format-check
+      - name: Format
+        run: |
+          make format
+          git diff --exit-code
 
   lint:
     runs-on: ubuntu-latest
