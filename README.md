@@ -35,7 +35,8 @@ npm run tauri build
 ## Development Commands
 
 ```bash
-make format        # 格式化 Rust + TypeScript
+make format        # 检查格式（CI 用）
+make format-fix    # 自动格式化 Rust + TypeScript
 make lint          # Clippy + ESLint
 make test          # Rust 单元测试 + Vitest 前端测试
 make build         # 编译 Rust + Vite 前端（不打包安装包）

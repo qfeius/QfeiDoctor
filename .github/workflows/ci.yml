@@ -27,9 +27,7 @@ jobs:
         run: npm ci
 
       - name: Format
-        run: |
-          make format
-          git diff --exit-code
+        run: make format
 
   lint:
     runs-on: ubuntu-latest

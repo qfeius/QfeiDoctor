@@ -1,7 +1,7 @@
-.PHONY: all build test lint format format-check dev clean
+.PHONY: all build test lint format format-fix format-check dev clean
 
 # Default target
-all: format-check lint test build
+all: format lint test build
 
 # ---- Build ----
 build:
@@ -35,15 +35,19 @@ lint-fe:
 	npm run lint
 
 # ---- Formatting ----
-format: format-rust format-fe
+# `make format` checks formatting (used by CI)
+# `make format-fix` auto-fixes formatting
+format: format-check-rust format-check-fe
 
-format-rust:
+format-fix: format-fix-rust format-fix-fe
+
+format-fix-rust:
 	cd src-tauri && cargo fmt
 
-format-fe:
+format-fix-fe:
 	npm run format
 
-format-check: format-check-rust format-check-fe
+format-check: format
 
 format-check-rust:
 	cd src-tauri && cargo fmt -- --check
