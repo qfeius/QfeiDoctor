@@ -1,0 +1,323 @@
+/* QfeiDoctor — neutral, clean skeleton styles */
+/* No dark theme yet per PE direction. Minimal, functional. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #f5f5f5;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+}
+
+.header h1 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Proxy Alert */
+.proxy-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.proxy-alert__text {
+  flex: 1;
+}
+
+.proxy-alert__action {
+  margin-left: 12px;
+}
+
+/* Input Bar */
+.input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.input-bar__field {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+}
+
+.input-bar__field:focus {
+  border-color: #4a90d9;
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.2);
+}
+
+/* Buttons */
+.btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn--primary {
+  background: #4a90d9;
+  color: #fff;
+  border-color: #4a90d9;
+}
+
+.btn--primary:hover {
+  background: #3a7bc8;
+}
+
+.btn--primary:disabled {
+  background: #a0c4e8;
+  cursor: not-allowed;
+}
+
+.btn--outline {
+  background: transparent;
+  color: #4a90d9;
+  border-color: #4a90d9;
+}
+
+.btn--outline:hover {
+  background: rgba(74, 144, 217, 0.08);
+}
+
+/* Result Layout */
+.result-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.card__title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+/* Summary Card */
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-row__label {
+  color: #666;
+}
+
+.summary-row__value {
+  font-weight: 500;
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge--pass {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge--warn {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge--fail {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-badge--skip {
+  background: #e2e3e5;
+  color: #6c757d;
+}
+
+/* DNS Records */
+.dns-record {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 13px;
+}
+
+.dns-record__type {
+  display: inline-block;
+  width: 50px;
+  font-weight: 600;
+  color: #4a90d9;
+}
+
+/* Diagnostic Trace */
+.trace {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 13px;
+  overflow-x: auto;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.trace__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+/* Phase Section */
+.phase-section {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.phase-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.phase-section__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.phase-section__detail {
+  padding-left: 16px;
+  color: #555;
+  line-height: 1.8;
+}
+
+.phase-section__duration {
+  color: #999;
+  font-size: 12px;
+}
+
+/* Recommended Actions */
+.actions {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.actions__title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.action-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.action-item:last-child {
+  border-bottom: none;
+}
+
+.action-item__cause {
+  font-weight: 500;
+  min-width: 150px;
+}
+
+.action-item__suggestion {
+  flex: 1;
+  color: #555;
+}
+
+.action-item__quick {
+  margin-left: auto;
+}
+
+/* Error */
+.error-banner {
+  padding: 12px 16px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  color: #721c24;
+  margin-bottom: 16px;
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
