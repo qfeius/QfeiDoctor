@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { Header } from "./components/Header";
 import { ProxyAlert } from "./components/ProxyAlert";
@@ -11,9 +11,15 @@ import { useDiagnostic } from "./hooks/useDiagnostic";
 
 function App() {
   const { isRunning, result, error, start } = useDiagnostic();
+  const [target, setTarget] = useState("https://contract.qfei.cn");
   const [copyToast, setCopyToast] = useState(false);
 
-  const handleCopy = async () => {
+  const handleStart = useCallback(() => {
+    const trimmed = target.trim();
+    if (trimmed && !isRunning) start(trimmed);
+  }, [target, isRunning, start]);
+
+  const handleCopy = useCallback(async () => {
     if (!result) return;
     try {
       await writeText(JSON.stringify(result, null, 2));
@@ -22,7 +28,23 @@ function App() {
     } catch (e) {
       console.error("clipboard write failed:", e);
     }
-  };
+  }, [result]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key === "c" && !window.getSelection()?.toString()) {
+        e.preventDefault();
+        handleCopy();
+      }
+      if (mod && e.key === "r") {
+        e.preventDefault();
+        handleStart();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleCopy, handleStart]);
 
   return (
     <div className="app">
@@ -31,7 +53,9 @@ function App() {
       {result && <ProxyAlert proxy={result.system.details.proxy} />}
 
       <InputBar
-        onStart={start}
+        target={target}
+        onTargetChange={setTarget}
+        onStart={handleStart}
         onCopy={handleCopy}
         isRunning={isRunning}
         hasResult={!!result}

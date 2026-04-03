@@ -1,47 +1,49 @@
-import { useState } from "react";
+import { useRef, useEffect } from "react";
 
 interface InputBarProps {
-  onStart: (target: string) => void;
+  target: string;
+  onTargetChange: (value: string) => void;
+  onStart: () => void;
   onCopy: () => void;
   isRunning: boolean;
   hasResult: boolean;
 }
 
 export function InputBar({
+  target,
+  onTargetChange,
   onStart,
   onCopy,
   isRunning,
   hasResult,
 }: InputBarProps) {
-  const [target, setTarget] = useState("https://contract.qfei.cn");
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleStart = () => {
-    const trimmed = target.trim();
-    if (trimmed) {
-      onStart(trimmed);
-    }
-  };
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isRunning) {
-      handleStart();
+      onStart();
     }
   };
 
   return (
     <div className="input-bar">
       <input
+        ref={inputRef}
         className="input-bar__field"
         type="text"
         placeholder="输入 URL，如 https://contract.qfei.cn"
         value={target}
-        onChange={(e) => setTarget(e.target.value)}
+        onChange={(e) => onTargetChange(e.target.value)}
         onKeyDown={handleKeyDown}
         disabled={isRunning}
       />
       <button
         className="btn btn--primary"
-        onClick={handleStart}
+        onClick={onStart}
         disabled={isRunning || !target.trim()}
       >
         {isRunning ? "分析中..." : "开始分析"}
