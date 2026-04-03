@@ -143,9 +143,7 @@ export function PhaseSection({
           if (key === "cert" && typeof value === "object" && value !== null) {
             return (
               <div key={key}>
-                <div style={{ marginTop: 4, marginBottom: 2 }}>
-                  证书：
-                </div>
+                <div style={{ marginTop: 4, marginBottom: 2 }}>证书：</div>
                 <div style={{ paddingLeft: 12 }}>
                   {renderCert(value as Record<string, unknown>)}
                 </div>
