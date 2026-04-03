@@ -210,19 +210,17 @@ async fn smoke_valid_https_domain() {
     assert!(report.tcp.details.connected);
     assert_eq!(report.tcp.details.port, 443);
 
-    // TLS: validate structure regardless of pass/fail
-    // NOTE: Known issue — TLS module may fail with UnknownIssuer if
-    // webpki-roots is not loaded into the TLS connector. This is a
-    // BE bug to fix, not a test issue.
+    // TLS: validate structure and cert fields
+    // NOTE: TLS status may vary by environment (proxy interception, etc.)
     assert_valid_status(&report.tls.status);
     assert_valid_severity(&report.tls.severity);
 
-    // HTTP should return 200 (reqwest handles certs independently)
+    // HTTP should return 200
     assert_eq!(report.http.status, Status::Pass);
     assert_eq!(report.http.details.status_code, Some(200));
     assert!(!report.http.details.empty_body);
 
-    // Summary: may fail due to TLS issue, but structure must be valid
+    // Summary: should not have DNS or TCP failure
     assert_valid_status(&report.summary.status);
     assert_valid_severity(&report.summary.severity);
     assert!(report.summary.resolved_ip.is_some());
@@ -249,7 +247,7 @@ async fn smoke_valid_https_url() {
 
     assert_eq!(report.dns.status, Status::Pass);
     assert_eq!(report.tcp.status, Status::Pass);
-    // TLS may fail due to known UnknownIssuer bug — validate structure only
+    // TLS may vary by environment
     assert_valid_status(&report.tls.status);
     assert_valid_status(&report.summary.status);
 
@@ -475,4 +473,142 @@ async fn smoke_duration_consistency() {
         // (skip is OK to be 0)
         let _ = (name, dur);
     }
+}
+
+// ===========================================================================
+// Smoke Test 9: Real target — contract.qfei.cn (default diagnostic target)
+// Validates the actual use case售后 encounters on day 1
+// ===========================================================================
+
+#[tokio::test]
+#[ignore]
+async fn smoke_real_target_contract_qfei() {
+    ensure_crypto_provider();
+    let report = diagnostics::run_diagnostics("https://contract.qfei.cn").await;
+
+    // Target parsing
+    assert_eq!(report.target.kind, "url");
+    assert_eq!(report.target.domain, "contract.qfei.cn");
+    assert_eq!(report.target.port, 443);
+
+    // DNS should resolve
+    assert_eq!(report.dns.status, Status::Pass);
+    assert!(report.dns.details.resolved);
+    assert!(report.dns.details.resolved_ip.is_some());
+
+    // TCP should connect
+    assert_eq!(report.tcp.status, Status::Pass);
+    assert!(report.tcp.details.connected);
+
+    // TLS: wildcard cert (*.qfei.cn) should match contract.qfei.cn
+    assert_eq!(report.tls.status, Status::Pass);
+    assert!(report.tls.details.handshake);
+    assert!(report.tls.details.cert.valid);
+    assert!(!report.tls.details.cert.expired);
+    assert!(
+        !report.tls.details.cert.domain_mismatch,
+        "Wildcard cert *.qfei.cn should match contract.qfei.cn"
+    );
+
+    // HTTP should return a response
+    assert!(
+        report.http.status == Status::Pass || report.http.status == Status::Warn,
+        "contract.qfei.cn should be reachable"
+    );
+
+    // Summary: should pass or warn (warn is OK — e.g. hosts_override on dev machines)
+    assert!(
+        report.summary.status == Status::Pass || report.summary.status == Status::Warn,
+        "contract.qfei.cn should not fail"
+    );
+
+    // JSON round-trip for Copy JSON flow
+    let json_str = serde_json::to_string_pretty(&report).expect("Must serialize");
+    let _parsed: DiagnosticReport = serde_json::from_str(&json_str).expect("Must deserialize back");
+
+    assert_json_schema_compliance(&report);
+}
+
+// ===========================================================================
+// Smoke Test 10: ipinfo module — client IP metadata
+// Validates that ipinfo returns useful data for售后 context
+// ===========================================================================
+
+#[tokio::test]
+#[ignore]
+async fn smoke_ipinfo_populated() {
+    ensure_crypto_provider();
+    let report = diagnostics::run_diagnostics("example.com").await;
+
+    // ipinfo should be populated (best-effort, but in normal network it should work)
+    if let Some(ref ipinfo) = report.ipinfo {
+        // IP should be non-empty and look like an IP address
+        assert!(!ipinfo.ip.is_empty(), "ipinfo.ip should not be empty");
+        assert!(
+            ipinfo.ip.contains('.') || ipinfo.ip.contains(':'),
+            "ipinfo.ip should look like an IP: {}",
+            ipinfo.ip
+        );
+        // Country should be non-empty
+        assert!(
+            !ipinfo.country.is_empty(),
+            "ipinfo.country should not be empty"
+        );
+    }
+    // Note: ipinfo is Option — may be None if ipinfo.io is unreachable.
+    // We don't fail the test for this since it's best-effort.
+
+    // Verify ipinfo serializes correctly in JSON output
+    let json = serde_json::to_value(&report).expect("Must serialize");
+    // ipinfo should be present in JSON (either object or null)
+    assert!(
+        json.get("ipinfo").is_some(),
+        "ipinfo field must be present in JSON output"
+    );
+}
+
+// ===========================================================================
+// Smoke Test 11: Copy JSON produces engineer-readable output
+// Validates the JSON售后 copies contains all actionable fields
+// ===========================================================================
+
+#[tokio::test]
+#[ignore]
+async fn smoke_copy_json_completeness() {
+    ensure_crypto_provider();
+    let report = diagnostics::run_diagnostics("https://contract.qfei.cn").await;
+
+    let json_str = serde_json::to_string_pretty(&report).expect("Must serialize");
+    let json: serde_json::Value = serde_json::from_str(&json_str).expect("Must parse");
+
+    // Engineer reading JSON should immediately see:
+    // 1. What was diagnosed
+    assert!(json["target"]["input"].is_string());
+    assert!(json["target"]["domain"].is_string());
+
+    // 2. Overall result
+    assert!(json["summary"]["status"].is_string());
+    assert!(json["summary"]["total_duration_ms"].is_u64());
+
+    // 3. Client network context (ipinfo)
+    // ipinfo is present (null or object)
+    assert!(json.get("ipinfo").is_some());
+
+    // 4. Each phase result with details
+    for phase in &["dns", "tcp", "tls", "http", "system"] {
+        assert!(
+            json[phase]["status"].is_string(),
+            "{} status missing",
+            phase
+        );
+        assert!(
+            json[phase]["details"].is_object(),
+            "{} details missing",
+            phase
+        );
+    }
+
+    // 5. Actionable recommendations
+    assert!(json["recommended_actions"]["manual_actions"].is_array());
+    assert!(json["recommended_actions"]["quick_actions"].is_array());
 }
