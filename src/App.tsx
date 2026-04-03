@@ -15,9 +15,13 @@ function App() {
 
   const handleCopy = async () => {
     if (!result) return;
-    await writeText(JSON.stringify(result, null, 2));
-    setCopyToast(true);
-    setTimeout(() => setCopyToast(false), 2000);
+    try {
+      await writeText(JSON.stringify(result, null, 2));
+      setCopyToast(true);
+      setTimeout(() => setCopyToast(false), 2000);
+    } catch (e) {
+      console.error("clipboard write failed:", e);
+    }
   };
 
   return (
