@@ -48,7 +48,11 @@ export function InputBar({
       >
         {isRunning ? "分析中..." : "开始分析"}
       </button>
-      <button className="btn btn--outline" onClick={onCopy} disabled={!hasResult}>
+      <button
+        className="btn btn--outline"
+        onClick={onCopy}
+        disabled={!hasResult}
+      >
         复制反馈信息
       </button>
     </div>

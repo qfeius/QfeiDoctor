@@ -1,4 +1,4 @@
-/**
+/*!
  * [INPUT]: reqwest HTTP client
  * [OUTPUT]: IpInfo struct with client's public IP metadata
  * [POS]: diagnostics module — independent probe, runs parallel to main phases

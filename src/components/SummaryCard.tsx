@@ -35,7 +35,9 @@ export function SummaryCard({ result }: SummaryCardProps) {
       )}
       {ipinfo && (
         <>
-          <div className="card__title" style={{ marginTop: 16 }}>Client Network</div>
+          <div className="card__title" style={{ marginTop: 16 }}>
+            Client Network
+          </div>
           <div className="summary-row">
             <span className="summary-row__label">Public IP</span>
             <span className="summary-row__value">{ipinfo.ip}</span>

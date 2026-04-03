@@ -19,7 +19,9 @@ export function DiagnosticTrace({ result }: DiagnosticTraceProps) {
     { name: "tls", ...result.tls },
     { name: "http", ...result.http },
     { name: "system", ...result.system },
-  ].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
+  ].sort(
+    (a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9),
+  );
 
   return (
     <div className="trace">
