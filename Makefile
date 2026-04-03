@@ -4,16 +4,20 @@
 all: format lint test build
 
 # ---- Build ----
-build:
+build: node_modules
 	cd src-tauri && cargo build
 	npm run build
 
-build-release:
+build-release: node_modules
 	cd src-tauri && cargo build --release
 	npm run build
 
 # ---- Development ----
-dev:
+node_modules: package.json
+	npm install
+	@touch node_modules
+
+dev: node_modules
 	npm run tauri dev
 
 run: dev
@@ -24,7 +28,7 @@ test: test-rust test-fe
 test-rust:
 	cd src-tauri && cargo test
 
-test-fe:
+test-fe: node_modules
 	npm run test
 
 # ---- Linting ----
@@ -33,7 +37,7 @@ lint: lint-rust lint-fe
 lint-rust:
 	cd src-tauri && cargo clippy -- -D warnings
 
-lint-fe:
+lint-fe: node_modules
 	npm run lint
 
 # ---- Formatting ----
@@ -46,7 +50,7 @@ format-fix: format-fix-rust format-fix-fe
 format-fix-rust:
 	cd src-tauri && cargo fmt
 
-format-fix-fe:
+format-fix-fe: node_modules
 	npm run format
 
 format-check: format
@@ -54,7 +58,7 @@ format-check: format
 format-check-rust:
 	cd src-tauri && cargo fmt -- --check
 
-format-check-fe:
+format-check-fe: node_modules
 	npm run format:check
 
 # ---- Clean ----
