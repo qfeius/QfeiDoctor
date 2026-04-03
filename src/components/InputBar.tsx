@@ -33,7 +33,7 @@ export function InputBar({
       <input
         className="input-bar__field"
         type="text"
-        placeholder="输入 URL 或域名，如 https://example.com 或 example.com"
+        placeholder="输入 URL 或域名，如 https://contract.qfei.cn"
         value={target}
         onChange={(e) => setTarget(e.target.value)}
         onKeyDown={handleKeyDown}

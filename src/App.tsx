@@ -18,7 +18,7 @@ function App() {
     try {
       await writeText(JSON.stringify(result, null, 2));
       setCopyToast(true);
-      setTimeout(() => setCopyToast(false), 2000);
+      setTimeout(() => setCopyToast(false), 1000);
     } catch (e) {
       console.error("clipboard write failed:", e);
     }
