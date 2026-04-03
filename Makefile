@@ -1,4 +1,4 @@
-.PHONY: all build test lint format format-fix format-check dev run clean
+.PHONY: all build test lint format format-fix format-check dev run preview clean
 
 # Default target
 all: format lint test build
@@ -21,6 +21,10 @@ dev: node_modules
 	npm run tauri dev
 
 run: dev
+
+preview: node_modules
+	npm run tauri build -- --debug
+	open src-tauri/target/debug/bundle/macos/QfeiDoctor.app
 
 # ---- Testing ----
 test: test-rust test-fe
