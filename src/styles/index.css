@@ -218,12 +218,15 @@ body {
 .summary-row__label {
   color: var(--text-secondary);
   font-size: 13px;
+  flex-shrink: 0;
+  margin-right: 12px;
 }
 
 .summary-row__value {
   font-weight: 500;
   font-family: "SF Mono", "Fira Code", monospace;
   color: var(--text-primary);
+  text-align: right;
 }
 
 /* Status Badge */
@@ -291,6 +294,8 @@ body {
 .trace__title {
   font-size: 12px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
   color: var(--text-secondary);
   margin-bottom: 12px;
   display: flex;
