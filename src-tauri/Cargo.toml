@@ -10,7 +10,7 @@ name = "qfei_doctor_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [[bin]]
-name = "qfei-doctor"
+name = "QfeiDoctor"
 path = "src/main.rs"
 
 [build-dependencies]
