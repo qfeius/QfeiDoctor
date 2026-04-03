@@ -105,6 +105,21 @@ pub async fn diagnose(domain: &str, ip: &str, port: u16) -> TlsModule {
     }
 }
 
+/// RFC 6125 wildcard matching: *.example.com matches foo.example.com
+/// but NOT foo.bar.example.com or example.com itself.
+fn match_domain(pattern: &str, domain: &str) -> bool {
+    if pattern == domain {
+        return true;
+    }
+    if let Some(suffix) = pattern.strip_prefix("*.") {
+        // Wildcard: domain must end with .suffix and have exactly one more label
+        if let Some(prefix) = domain.strip_suffix(suffix) {
+            return prefix.ends_with('.') && !prefix[..prefix.len() - 1].contains('.');
+        }
+    }
+    false
+}
+
 fn extract_cert_info(
     domain: &str,
     peer_certs: Option<&[rustls::pki_types::CertificateDer<'_>]>,
@@ -140,19 +155,33 @@ fn extract_cert_info(
     };
     let expiring_soon = days_remaining.is_some_and(|d| d <= 30 && d > 0);
 
-    // Check domain match
-    let domain_matched = subject.contains(domain)
-        || cert
-            .subject_alternative_name()
-            .ok()
-            .flatten()
-            .map(|san| {
-                san.value
-                    .general_names
-                    .iter()
-                    .any(|name| format!("{}", name).contains(domain))
-            })
-            .unwrap_or(false);
+    // Check domain match (supports wildcard certs like *.example.com)
+    let domain_matched = {
+        let mut names: Vec<String> = Vec::new();
+
+        // Collect CN from subject
+        for rdn in cert.subject().iter() {
+            for attr in rdn.iter() {
+                if attr.attr_type() == &x509_parser::oid_registry::OID_X509_COMMON_NAME {
+                    if let Ok(cn) = attr.as_str() {
+                        names.push(cn.to_lowercase());
+                    }
+                }
+            }
+        }
+
+        // Collect SAN DNS names
+        if let Some(san) = cert.subject_alternative_name().ok().flatten() {
+            for name in &san.value.general_names {
+                if let x509_parser::extensions::GeneralName::DNSName(dns) = name {
+                    names.push(dns.to_lowercase());
+                }
+            }
+        }
+
+        let domain_lower = domain.to_lowercase();
+        names.iter().any(|n| match_domain(n, &domain_lower))
+    };
 
     // Check self-signed
     let self_signed = cert.issuer() == cert.subject();
