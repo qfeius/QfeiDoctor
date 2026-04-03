@@ -18,6 +18,7 @@ export interface DiagnosticResult {
   http: HttpModule;
   system: SystemModule;
   recommended_actions: RecommendedActions;
+  ipinfo: IpInfo | null;
 }
 
 export interface Target {
@@ -130,6 +131,18 @@ export interface ProxyInfo {
   address: string | null;
   pac_url: string | null;
   env_var: string | null;
+}
+
+// IP Info (client network identity)
+export interface IpInfo {
+  ip: string;
+  city: string;
+  region: string;
+  country: string;
+  loc: string;
+  org: string;
+  postal: string;
+  timezone: string;
 }
 
 // Recommended Actions

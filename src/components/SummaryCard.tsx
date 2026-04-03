@@ -6,7 +6,7 @@ interface SummaryCardProps {
 }
 
 export function SummaryCard({ result }: SummaryCardProps) {
-  const { summary } = result;
+  const { summary, ipinfo } = result;
 
   return (
     <div className="card">
@@ -32,6 +32,29 @@ export function SummaryCard({ result }: SummaryCardProps) {
           <span className="summary-row__label">Failure Stage</span>
           <span className="summary-row__value">{summary.failure_stage}</span>
         </div>
+      )}
+      {ipinfo && (
+        <>
+          <div className="card__title" style={{ marginTop: 16 }}>Client Network</div>
+          <div className="summary-row">
+            <span className="summary-row__label">Public IP</span>
+            <span className="summary-row__value">{ipinfo.ip}</span>
+          </div>
+          <div className="summary-row">
+            <span className="summary-row__label">Location</span>
+            <span className="summary-row__value">
+              {ipinfo.city}, {ipinfo.region}, {ipinfo.country}
+            </span>
+          </div>
+          <div className="summary-row">
+            <span className="summary-row__label">ISP / Org</span>
+            <span className="summary-row__value">{ipinfo.org}</span>
+          </div>
+          <div className="summary-row">
+            <span className="summary-row__label">Timezone</span>
+            <span className="summary-row__value">{ipinfo.timezone}</span>
+          </div>
+        </>
       )}
     </div>
   );

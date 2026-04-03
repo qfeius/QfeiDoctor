@@ -14,6 +14,7 @@ pub struct DiagnosticReport {
     pub http: HttpModule,
     pub system: SystemModule,
     pub recommended_actions: RecommendedActions,
+    pub ipinfo: Option<IpInfo>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -184,6 +185,18 @@ pub struct QuickAction {
     pub label: String,
     pub kind: String,
     pub target: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IpInfo {
+    pub ip: String,
+    pub city: String,
+    pub region: String,
+    pub country: String,
+    pub loc: String,
+    pub org: String,
+    pub postal: String,
+    pub timezone: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

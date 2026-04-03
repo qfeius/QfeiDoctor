@@ -1,5 +1,6 @@
 pub mod dns;
 pub mod http;
+pub mod ipinfo;
 pub mod result;
 pub mod system;
 pub mod tcp;
@@ -12,6 +13,9 @@ pub async fn run_diagnostics(input: &str) -> DiagnosticReport {
     let start = std::time::Instant::now();
 
     let target = parse_target(input);
+
+    // Fire ipinfo in parallel (independent of diagnostic phases)
+    let ipinfo_handle = tokio::spawn(ipinfo::fetch());
 
     // Phase 1: DNS
     let dns_result = dns::diagnose(&target.domain).await;
@@ -128,6 +132,9 @@ pub async fn run_diagnostics(input: &str) -> DiagnosticReport {
         &system_result,
     );
 
+    // Collect ipinfo result (best-effort)
+    let ipinfo_result = ipinfo_handle.await.ok().flatten();
+
     let total_duration_ms = start.elapsed().as_millis() as u64;
 
     DiagnosticReport {
@@ -147,6 +154,7 @@ pub async fn run_diagnostics(input: &str) -> DiagnosticReport {
         http: http_result,
         system: system_result,
         recommended_actions,
+        ipinfo: ipinfo_result,
     }
 }
 
