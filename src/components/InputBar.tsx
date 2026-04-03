@@ -13,7 +13,7 @@ export function InputBar({
   isRunning,
   hasResult,
 }: InputBarProps) {
-  const [target, setTarget] = useState("");
+  const [target, setTarget] = useState("https://contract.qfei.cn");
 
   const handleStart = () => {
     const trimmed = target.trim();
