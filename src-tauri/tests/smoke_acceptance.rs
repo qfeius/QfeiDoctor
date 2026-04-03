@@ -540,23 +540,26 @@ async fn smoke_ipinfo_populated() {
     ensure_crypto_provider();
     let report = diagnostics::run_diagnostics("example.com").await;
 
-    // ipinfo should be populated (best-effort, but in normal network it should work)
-    if let Some(ref ipinfo) = report.ipinfo {
-        // IP should be non-empty and look like an IP address
-        assert!(!ipinfo.ip.is_empty(), "ipinfo.ip should not be empty");
-        assert!(
-            ipinfo.ip.contains('.') || ipinfo.ip.contains(':'),
-            "ipinfo.ip should look like an IP: {}",
-            ipinfo.ip
-        );
-        // Country should be non-empty
-        assert!(
-            !ipinfo.country.is_empty(),
-            "ipinfo.country should not be empty"
-        );
-    }
-    // Note: ipinfo is Option — may be None if ipinfo.io is unreachable.
-    // We don't fail the test for this since it's best-effort.
+    // ipinfo must be populated in normal network environment
+    let ipinfo = report
+        .ipinfo
+        .as_ref()
+        .expect("ipinfo should be Some in normal network — ipinfo.io must be reachable");
+
+    // IP should be non-empty and look like an IP address
+    assert!(!ipinfo.ip.is_empty(), "ipinfo.ip should not be empty");
+    assert!(
+        ipinfo.ip.contains('.') || ipinfo.ip.contains(':'),
+        "ipinfo.ip should look like an IP: {}",
+        ipinfo.ip
+    );
+    // Country should be non-empty
+    assert!(
+        !ipinfo.country.is_empty(),
+        "ipinfo.country should not be empty"
+    );
+    // Org/ISP should be non-empty (useful for售后 context)
+    assert!(!ipinfo.org.is_empty(), "ipinfo.org should not be empty");
 
     // Verify ipinfo serializes correctly in JSON output
     let json = serde_json::to_value(&report).expect("Must serialize");
