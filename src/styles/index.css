@@ -142,19 +142,19 @@ body {
 }
 
 .btn--primary {
-  background: var(--accent-green);
+  background: #1c48e1;
   color: #fff;
-  border-color: var(--accent-green);
+  border-color: #1c48e1;
   font-weight: 500;
   min-width: 96px;
 }
 
 .btn--primary:hover {
-  background: #156d2d;
+  background: #1538b8;
 }
 
 .btn--primary:disabled {
-  background: rgba(26, 127, 55, 0.4);
+  background: rgba(28, 72, 225, 0.4);
   border-color: transparent;
   cursor: not-allowed;
 }
