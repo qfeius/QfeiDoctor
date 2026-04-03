@@ -5,6 +5,13 @@ interface DiagnosticTraceProps {
   result: DiagnosticResult;
 }
 
+const STATUS_ORDER: Record<string, number> = {
+  fail: 0,
+  warn: 1,
+  pass: 2,
+  skip: 3,
+};
+
 export function DiagnosticTrace({ result }: DiagnosticTraceProps) {
   const phases = [
     { name: "dns", ...result.dns },
@@ -12,7 +19,7 @@ export function DiagnosticTrace({ result }: DiagnosticTraceProps) {
     { name: "tls", ...result.tls },
     { name: "http", ...result.http },
     { name: "system", ...result.system },
-  ];
+  ].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
 
   return (
     <div className="trace">
