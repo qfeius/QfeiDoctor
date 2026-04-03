@@ -6,7 +6,7 @@ import { InputBar } from "./components/InputBar";
 import { SummaryCard } from "./components/SummaryCard";
 import { DnsRecordsCard } from "./components/DnsRecordsCard";
 import { DiagnosticTrace } from "./components/DiagnosticTrace";
-import { RecommendedActions } from "./components/RecommendedActions";
+
 import { useDiagnostic } from "./hooks/useDiagnostic";
 
 function App() {
@@ -52,8 +52,6 @@ function App() {
             </div>
             <DiagnosticTrace result={result} />
           </div>
-
-          <RecommendedActions actions={result.recommended_actions} />
         </>
       )}
     </div>

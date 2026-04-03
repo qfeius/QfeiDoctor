@@ -286,8 +286,6 @@ body {
   font-family: "SF Mono", "Fira Code", monospace;
   font-size: 13px;
   overflow-x: auto;
-  max-height: 600px;
-  overflow-y: auto;
 }
 
 .trace__title {
