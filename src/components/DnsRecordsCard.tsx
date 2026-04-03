@@ -12,9 +12,9 @@ export function DnsRecordsCard({ dns }: DnsRecordsCardProps) {
   return (
     <div className="card" style={{ marginTop: 16 }}>
       <div className="card__title">
-        DNS Records{" "}
+        DNS 记录{" "}
         <span style={{ fontWeight: 400, color: "var(--text-muted)" }}>
-          {records.length} found
+          共 {records.length} 条
         </span>
       </div>
       {records.map((record, i) => (

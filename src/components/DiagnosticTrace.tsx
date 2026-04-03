@@ -25,7 +25,7 @@ export function DiagnosticTrace({ result }: DiagnosticTraceProps) {
 
   return (
     <div className="trace">
-      <div className="trace__title">diagnostic_trace.log</div>
+      <div className="trace__title">诊断日志</div>
       {phases.map((phase) => (
         <PhaseSection
           key={phase.name}

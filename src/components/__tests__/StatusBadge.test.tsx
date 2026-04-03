@@ -5,12 +5,12 @@ import { StatusBadge } from "../StatusBadge";
 describe("StatusBadge", () => {
   it("renders pass status", () => {
     render(<StatusBadge status="pass" />);
-    expect(screen.getByText("Pass")).toBeDefined();
+    expect(screen.getByText("通过")).toBeDefined();
   });
 
   it("renders fail status", () => {
     render(<StatusBadge status="fail" />);
-    expect(screen.getByText("Fail")).toBeDefined();
+    expect(screen.getByText("失败")).toBeDefined();
   });
 
   it("applies correct CSS class", () => {

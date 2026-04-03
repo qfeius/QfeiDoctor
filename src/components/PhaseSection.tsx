@@ -2,61 +2,61 @@ import type { Status } from "../types/diagnostic";
 import { StatusBadge } from "./StatusBadge";
 
 const PHASE_LABELS: Record<string, string> = {
-  dns: "Phase 1: DNS Resolution",
-  tcp: "Phase 2: Network Reachability",
-  tls: "Phase 3: TLS/SSL Negotiation",
-  http: "Phase 4: HTTP Request",
-  system: "Phase 5: System / Proxy",
+  dns: "阶段 1：DNS 解析",
+  tcp: "阶段 2：网络连通性",
+  tls: "阶段 3：TLS/SSL 握手",
+  http: "阶段 4：HTTP 请求",
+  system: "阶段 5：系统 / 代理",
 };
 
 /** Human-readable labels for detail keys, grouped by phase */
 const DETAIL_LABELS: Record<string, Record<string, string>> = {
   dns: {
-    resolved: "Resolved",
-    resolved_ip: "Resolved IP",
-    suspected_hijack: "DNS Hijack Suspected",
-    private_ip: "Private IP",
+    resolved: "已解析",
+    resolved_ip: "解析 IP",
+    suspected_hijack: "疑似 DNS 劫持",
+    private_ip: "内网 IP",
   },
   tcp: {
-    connected: "Connected",
-    ip: "IP Address",
-    port: "Port",
+    connected: "已连接",
+    ip: "IP 地址",
+    port: "端口",
   },
   tls: {
-    handshake: "Handshake",
-    version: "TLS Version",
+    handshake: "握手",
+    version: "TLS 版本",
   },
   http: {
-    status_code: "Status Code",
-    empty_body: "Empty Body",
-    downgraded: "Downgraded to HTTP",
+    status_code: "状态码",
+    empty_body: "响应体为空",
+    downgraded: "降级为 HTTP",
   },
   system: {
-    clock_skewed: "Clock Skewed",
-    clock_offset_sec: "Clock Offset",
-    hosts_override: "Hosts Override",
+    clock_skewed: "时钟偏移",
+    clock_offset_sec: "偏移量",
+    hosts_override: "Hosts 覆盖",
   },
 };
 
 function formatValue(value: unknown): string {
   if (value === null || value === undefined) return "—";
-  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "boolean") return value ? "是" : "否";
   if (typeof value === "number") return String(value);
   return String(value);
 }
 
 function renderCert(cert: Record<string, unknown>) {
   const rows: [string, string][] = [
-    ["Valid", formatValue(cert.valid)],
-    ["Issuer", formatValue(cert.issuer)],
-    ["Subject", formatValue(cert.subject)],
-    ["Expires", formatValue(cert.not_after)],
-    ["Days Remaining", formatValue(cert.days_remaining)],
-    ["Expired", formatValue(cert.expired)],
-    ["Expiring Soon", formatValue(cert.expiring_soon)],
-    ["Domain Mismatch", formatValue(cert.domain_mismatch)],
-    ["Chain Incomplete", formatValue(cert.chain_incomplete)],
-    ["Self-Signed", formatValue(cert.self_signed)],
+    ["有效", formatValue(cert.valid)],
+    ["颁发者", formatValue(cert.issuer)],
+    ["主题", formatValue(cert.subject)],
+    ["过期时间", formatValue(cert.not_after)],
+    ["剩余天数", formatValue(cert.days_remaining)],
+    ["已过期", formatValue(cert.expired)],
+    ["即将过期", formatValue(cert.expiring_soon)],
+    ["域名不匹配", formatValue(cert.domain_mismatch)],
+    ["证书链不完整", formatValue(cert.chain_incomplete)],
+    ["自签名", formatValue(cert.self_signed)],
   ];
   return rows.map(([label, val]) => (
     <div key={label}>
@@ -67,11 +67,11 @@ function renderCert(cert: Record<string, unknown>) {
 
 function renderProxy(proxy: Record<string, unknown>) {
   const rows: [string, string][] = [
-    ["Enabled", formatValue(proxy.enabled)],
-    ["Type", formatValue(proxy.type)],
-    ["Address", formatValue(proxy.address)],
+    ["已启用", formatValue(proxy.enabled)],
+    ["类型", formatValue(proxy.type)],
+    ["地址", formatValue(proxy.address)],
     ["PAC URL", formatValue(proxy.pac_url)],
-    ["Env Var", formatValue(proxy.env_var)],
+    ["环境变量", formatValue(proxy.env_var)],
   ];
   return rows.map(([label, val]) => (
     <div key={label}>
@@ -81,10 +81,10 @@ function renderProxy(proxy: Record<string, unknown>) {
 }
 
 function renderRedirectChain(chain: unknown[]) {
-  if (chain.length === 0) return <div>Redirect Chain: (none)</div>;
+  if (chain.length === 0) return <div>重定向链：（无）</div>;
   return (
     <>
-      <div>Redirect Chain:</div>
+      <div>重定向链：</div>
       {chain.map((url, i) => (
         <div key={i} style={{ paddingLeft: 12 }}>
           {i + 1}. {String(url)}
@@ -96,10 +96,10 @@ function renderRedirectChain(chain: unknown[]) {
 
 function renderHeaders(headers: Record<string, unknown>) {
   const entries = Object.entries(headers);
-  if (entries.length === 0) return <div>Response Headers: (none)</div>;
+  if (entries.length === 0) return <div>响应头：（无）</div>;
   return (
     <>
-      <div>Response Headers:</div>
+      <div>响应头：</div>
       {entries.map(([k, v]) => (
         <div key={k} style={{ paddingLeft: 12 }}>
           {k}: {String(v)}
@@ -136,7 +136,7 @@ export function PhaseSection({
       </div>
       <div className="phase-section__detail">
         {error && (
-          <div style={{ color: "var(--accent-red)" }}>Error: {error}</div>
+          <div style={{ color: "var(--accent-red)" }}>错误：{error}</div>
         )}
         {Object.entries(details).map(([key, value]) => {
           // Special renderers for nested objects
@@ -144,7 +144,7 @@ export function PhaseSection({
             return (
               <div key={key}>
                 <div style={{ marginTop: 4, marginBottom: 2 }}>
-                  Certificate:
+                  证书：
                 </div>
                 <div style={{ paddingLeft: 12 }}>
                   {renderCert(value as Record<string, unknown>)}
@@ -155,7 +155,7 @@ export function PhaseSection({
           if (key === "proxy" && typeof value === "object" && value !== null) {
             return (
               <div key={key}>
-                <div style={{ marginTop: 4, marginBottom: 2 }}>Proxy:</div>
+                <div style={{ marginTop: 4, marginBottom: 2 }}>代理：</div>
                 <div style={{ paddingLeft: 12 }}>
                   {renderProxy(value as Record<string, unknown>)}
                 </div>

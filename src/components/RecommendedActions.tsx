@@ -13,7 +13,7 @@ export function RecommendedActions({ actions }: RecommendedActionsProps) {
 
   return (
     <div className="actions">
-      <div className="actions__title">Recommended Actions</div>
+      <div className="actions__title">建议操作</div>
 
       {actions.manual_actions.map((text, i) => (
         <div className="action-item" key={i}>
