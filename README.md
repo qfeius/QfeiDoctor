@@ -60,6 +60,16 @@ docs/
   diagnostic-result.schema.json  # 诊断结果 JSON schema v0（source of truth）
 ```
 
+## macOS 首次启动
+
+从 GitHub Releases 下载的 `.dmg` 安装后，首次打开可能提示 **"QfeiDoctor 已损坏，无法打开"** 或 **"无法验证开发者"**。这是 macOS Gatekeeper 对未签名应用的隔离机制，执行以下命令解除：
+
+```bash
+xattr -cr /Applications/QfeiDoctor.app
+```
+
+然后重新打开即可正常使用。
+
 ## Docs
 
 - `docs/PRD.md` — product scope and user flow
