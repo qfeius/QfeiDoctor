@@ -136,11 +136,17 @@ fn parse_http_date(date: &str) -> Option<i64> {
 
 fn proxy_settings_uri() -> Option<String> {
     #[cfg(target_os = "windows")]
-    { Some("ms-settings:network-proxy".to_string()) }
+    {
+        Some("ms-settings:network-proxy".to_string())
+    }
     #[cfg(target_os = "macos")]
-    { Some("x-apple.systempreferences:com.apple.Network-Settings.extension".to_string()) }
+    {
+        Some("x-apple.systempreferences:com.apple.Network-Settings.extension".to_string())
+    }
     #[cfg(not(any(target_os = "windows", target_os = "macos")))]
-    { None }
+    {
+        None
+    }
 }
 
 fn detect_proxy() -> ProxyInfo {
