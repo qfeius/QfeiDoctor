@@ -23,6 +23,11 @@
       "csp": null
     }
   },
+  "plugins": {
+    "shell": {
+      "open": "((mailto:\\S+)|(tel:\\S+)|(https?://\\S+)|(ms-settings:[^\\s]+)|(x-apple\\.systempreferences:[^\\s]+))"
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",
