@@ -117,7 +117,7 @@ jobs:
           tagName: v__VERSION__
           releaseName: "QfeiDoctor v__VERSION__"
           releaseBody: "See the assets to download and install this version."
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
 
       - name: Upload artifacts
