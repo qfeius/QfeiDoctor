@@ -131,6 +131,7 @@ export interface ProxyInfo {
   address: string | null;
   pac_url: string | null;
   env_var: string | null;
+  settings_uri: string | null;
 }
 
 // IP Info (client network identity)

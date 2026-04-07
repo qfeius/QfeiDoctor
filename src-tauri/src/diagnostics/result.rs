@@ -171,6 +171,7 @@ pub struct ProxyInfo {
     pub address: Option<String>,
     pub pac_url: Option<String>,
     pub env_var: Option<String>,
+    pub settings_uri: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

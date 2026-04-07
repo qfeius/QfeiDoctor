@@ -15,12 +15,14 @@ export function ProxyAlert({ proxy }: ProxyAlertProps) {
         {proxy.address ? `（${proxy.address}）` : ""}
         ，这可能会影响网络诊断结果。建议暂时关闭代理设置后重新测试。
       </span>
-      <button
-        className="btn btn--outline proxy-alert__action"
-        onClick={() => open("ms-settings:network-proxy")}
-      >
-        打开代理设置
-      </button>
+      {proxy.settings_uri && (
+        <button
+          className="btn btn--outline proxy-alert__action"
+          onClick={() => open(proxy.settings_uri!)}
+        >
+          打开代理设置
+        </button>
+      )}
     </div>
   );
 }

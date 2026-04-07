@@ -202,12 +202,14 @@ fn generate_actions(
              请关闭代理或联系 IT 部门将目标域名加入代理白名单"
                 .to_string(),
         );
-        quick.push(QuickAction {
-            id: "open_proxy".to_string(),
-            label: "打开代理设置".to_string(),
-            kind: "open_uri".to_string(),
-            target: "ms-settings:network-proxy".to_string(),
-        });
+        if let Some(uri) = &system.details.proxy.settings_uri {
+            quick.push(QuickAction {
+                id: "open_proxy".to_string(),
+                label: "打开代理设置".to_string(),
+                kind: "open_uri".to_string(),
+                target: uri.clone(),
+            });
+        }
     }
 
     // ── COMBO-02: DNS hijack + HTTP anomaly → DNS hijack/pollution ──
@@ -349,12 +351,14 @@ fn generate_actions(
     // System (standalone, not already in combos)
     if system.details.proxy.enabled && tls.status != Status::Fail && !tls.details.cert.self_signed {
         manual.push("检测到系统代理已开启，如遇问题建议关闭代理后重试".to_string());
-        quick.push(QuickAction {
-            id: "open_proxy".to_string(),
-            label: "打开代理设置".to_string(),
-            kind: "open_uri".to_string(),
-            target: "ms-settings:network-proxy".to_string(),
-        });
+        if let Some(uri) = &system.details.proxy.settings_uri {
+            quick.push(QuickAction {
+                id: "open_proxy".to_string(),
+                label: "打开代理设置".to_string(),
+                kind: "open_uri".to_string(),
+                target: uri.clone(),
+            });
+        }
     }
 
     if system.details.clock_skewed && tls.status != Status::Fail {
@@ -659,6 +663,7 @@ mod tests {
                     address: None,
                     pac_url: None,
                     env_var: None,
+                    settings_uri: Some("ms-settings:network-proxy".into()),
                 },
                 clock_skewed: false,
                 clock_offset_sec: None,
@@ -680,6 +685,7 @@ mod tests {
                     address: Some("10.0.0.1:8080".into()),
                     pac_url: None,
                     env_var: None,
+                    settings_uri: Some("ms-settings:network-proxy".into()),
                 },
                 clock_skewed: false,
                 clock_offset_sec: None,
@@ -701,6 +707,7 @@ mod tests {
                     address: None,
                     pac_url: None,
                     env_var: None,
+                    settings_uri: Some("ms-settings:network-proxy".into()),
                 },
                 clock_skewed: true,
                 clock_offset_sec: Some(3600),

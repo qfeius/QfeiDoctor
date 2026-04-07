@@ -1,1 +1,1 @@
-{"default":{"identifier":"default","description":"Default capabilities for the main window","local":true,"windows":["main"],"permissions":["core:default","clipboard-manager:allow-write-text"]}}
+{"default":{"identifier":"default","description":"Default capabilities for the main window","local":true,"windows":["main"],"permissions":["core:default","clipboard-manager:allow-write-text",{"identifier":"shell:allow-open","allow":[{"url":"https://*"},{"url":"http://*"},{"url":"ms-settings:*"},{"url":"x-apple.systempreferences:*"}]}]}}

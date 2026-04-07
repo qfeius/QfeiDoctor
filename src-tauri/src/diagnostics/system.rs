@@ -134,6 +134,15 @@ fn parse_http_date(date: &str) -> Option<i64> {
     Some(total_days * 86400 + hour * 3600 + minute * 60 + second)
 }
 
+fn proxy_settings_uri() -> Option<String> {
+    #[cfg(target_os = "windows")]
+    { Some("ms-settings:network-proxy".to_string()) }
+    #[cfg(target_os = "macos")]
+    { Some("x-apple.systempreferences:com.apple.Network-Settings.extension".to_string()) }
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    { None }
+}
+
 fn detect_proxy() -> ProxyInfo {
     #[cfg(target_os = "windows")]
     {
@@ -170,6 +179,7 @@ fn detect_proxy_windows() -> ProxyInfo {
                 address: None,
                 pac_url: Some(auto_config_url),
                 env_var: None,
+                settings_uri: proxy_settings_uri(),
             };
         }
 
@@ -187,6 +197,7 @@ fn detect_proxy_windows() -> ProxyInfo {
             },
             pac_url: None,
             env_var: None,
+            settings_uri: proxy_settings_uri(),
         };
     }
 
@@ -196,6 +207,7 @@ fn detect_proxy_windows() -> ProxyInfo {
         address: None,
         pac_url: None,
         env_var: None,
+        settings_uri: proxy_settings_uri(),
     }
 }
 
@@ -219,6 +231,7 @@ fn detect_proxy_env() -> ProxyInfo {
         address: server.clone(),
         pac_url: None,
         env_var: server,
+        settings_uri: proxy_settings_uri(),
     }
 }
 
