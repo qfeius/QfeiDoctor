@@ -650,6 +650,14 @@ mod tests {
         }
     }
 
+    fn test_os_info() -> OsInfo {
+        OsInfo {
+            name: "macOS".into(),
+            version: "15.0".into(),
+            arch: "aarch64".into(),
+        }
+    }
+
     fn ok_system() -> SystemModule {
         SystemModule {
             status: Status::Pass,
@@ -657,6 +665,7 @@ mod tests {
             duration_ms: 1,
             error: None,
             details: SystemDetails {
+                os_info: test_os_info(),
                 proxy: ProxyInfo {
                     enabled: false,
                     proxy_type: None,
@@ -679,6 +688,7 @@ mod tests {
             duration_ms: 1,
             error: None,
             details: SystemDetails {
+                os_info: test_os_info(),
                 proxy: ProxyInfo {
                     enabled: true,
                     proxy_type: Some("system".into()),
@@ -701,6 +711,7 @@ mod tests {
             duration_ms: 1,
             error: Some("系统时钟偏差 3600 秒".into()),
             details: SystemDetails {
+                os_info: test_os_info(),
                 proxy: ProxyInfo {
                     enabled: false,
                     proxy_type: None,

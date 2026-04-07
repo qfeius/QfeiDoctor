@@ -150,6 +150,19 @@ export function PhaseSection({
               </div>
             );
           }
+          if (
+            key === "os_info" &&
+            typeof value === "object" &&
+            value !== null
+          ) {
+            const os = value as Record<string, unknown>;
+            return (
+              <div key={key}>
+                操作系统: {String(os.name)} {String(os.version)} (
+                {String(os.arch)})
+              </div>
+            );
+          }
           if (key === "proxy" && typeof value === "object" && value !== null) {
             return (
               <div key={key}>

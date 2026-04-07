@@ -157,10 +157,18 @@ pub struct SystemModule {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemDetails {
+    pub os_info: OsInfo,
     pub proxy: ProxyInfo,
     pub clock_skewed: bool,
     pub clock_offset_sec: Option<i64>,
     pub hosts_override: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OsInfo {
+    pub name: String,
+    pub version: String,
+    pub arch: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

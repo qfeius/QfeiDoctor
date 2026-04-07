@@ -1,10 +1,11 @@
-use super::result::{ProxyInfo, Severity, Status, SystemDetails, SystemModule};
+use super::result::{OsInfo, ProxyInfo, Severity, Status, SystemDetails, SystemModule};
 
 /// Diagnose system network configuration.
 /// `server_date_header` is the HTTP Date header from the HTTP module, if available.
 pub fn diagnose(server_date_header: Option<&str>) -> SystemModule {
     let start = std::time::Instant::now();
 
+    let os_info = collect_os_info();
     let proxy = detect_proxy();
     let hosts_override = check_hosts_override();
     let (clock_skewed, clock_offset_sec) = check_clock_skew(server_date_header);
@@ -38,12 +39,91 @@ pub fn diagnose(server_date_header: Option<&str>) -> SystemModule {
         duration_ms: start.elapsed().as_millis() as u64,
         error,
         details: SystemDetails {
+            os_info,
             proxy,
             clock_skewed,
             clock_offset_sec,
             hosts_override,
         },
     }
+}
+
+// ---- 操作系统信息采集 ----
+
+fn collect_os_info() -> OsInfo {
+    OsInfo {
+        name: os_name(),
+        version: os_version(),
+        arch: std::env::consts::ARCH.to_string(),
+    }
+}
+
+fn os_name() -> String {
+    match std::env::consts::OS {
+        "macos" => "macOS".to_string(),
+        "windows" => "Windows".to_string(),
+        "linux" => "Linux".to_string(),
+        other => other.to_string(),
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn os_version() -> String {
+    std::process::Command::new("sw_vers")
+        .arg("-productVersion")
+        .output()
+        .ok()
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|| "unknown".to_string())
+}
+
+#[cfg(target_os = "windows")]
+fn os_version() -> String {
+    use winreg::enums::*;
+    use winreg::RegKey;
+
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    hklm.open_subkey("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion")
+        .ok()
+        .and_then(|key| {
+            let display: String = key.get_value("DisplayVersion").ok()?;
+            let build: String = key.get_value("CurrentBuildNumber").ok()?;
+            Some(format!("{display} (Build {build})"))
+        })
+        .unwrap_or_else(|| "unknown".to_string())
+}
+
+#[cfg(target_os = "linux")]
+fn os_version() -> String {
+    // 从 /etc/os-release 读取 PRETTY_NAME，如 "Ubuntu 24.04 LTS"
+    std::fs::read_to_string("/etc/os-release")
+        .ok()
+        .and_then(|content| {
+            content
+                .lines()
+                .find(|l| l.starts_with("PRETTY_NAME="))
+                .map(|l| {
+                    l.trim_start_matches("PRETTY_NAME=")
+                        .trim_matches('"')
+                        .to_string()
+                })
+        })
+        .unwrap_or_else(|| {
+            // fallback: uname -r
+            std::process::Command::new("uname")
+                .arg("-r")
+                .output()
+                .ok()
+                .and_then(|o| String::from_utf8(o.stdout).ok())
+                .map(|s| s.trim().to_string())
+                .unwrap_or_else(|| "unknown".to_string())
+        })
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
+fn os_version() -> String {
+    "unknown".to_string()
 }
 
 /// Check clock skew by comparing local time with server Date header.

@@ -119,10 +119,17 @@ export interface SystemModule extends ModuleBase {
 }
 
 export interface SystemDetails {
+  os_info: OsInfo;
   proxy: ProxyInfo;
   clock_skewed: boolean;
   clock_offset_sec: number | null;
   hosts_override: boolean;
+}
+
+export interface OsInfo {
+  name: string;
+  version: string;
+  arch: string;
 }
 
 export interface ProxyInfo {
