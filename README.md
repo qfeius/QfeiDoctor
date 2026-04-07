@@ -13,7 +13,7 @@
 
 ```bash
 # 安装依赖
-npm ci
+npm install
 
 # 开发模式（启动 Tauri + Vite dev server）
 make run
