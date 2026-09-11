@@ -12,6 +12,7 @@ dist/
 
 # Tauri
 src-tauri/target/
+src-tauri/tauri.release.conf.json
 
 # IDE
 .idea/
